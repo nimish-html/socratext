@@ -1,8 +1,12 @@
 import { fetchBooks } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export default async function Home() {
+  // Opt out of caching for this page
+  noStore();
+  
   const books = await fetchBooks();
   
   return (

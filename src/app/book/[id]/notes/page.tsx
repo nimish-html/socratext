@@ -1,39 +1,98 @@
-import { fetchBooks, fetchNotes } from '@/lib/db';
-import CameraCapture from './CameraCapture';
+"use client";
 
-type Props = {
-  params: { id: string }
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { CameraCapture } from '@/components/camera/CameraCapture';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { addNote } from '@/lib/db';
+
+interface NoteTakingProps {
+  params: {
+    id: string;
+  };
 }
 
-export default async function NotesPage({ params }: Props) {
-  const books = await fetchBooks();
-  const book = books.find((b) => b.id === params.id);
-  const notes = await fetchNotes(params.id);
+export default function NoteTaking({ params }: NoteTakingProps) {
+  const router = useRouter();
+  const [noteContent, setNoteContent] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!book) {
-    return <div>Book not found</div>;
-  }
+  const handleCapture = (data: { note: string }) => {
+    setNoteContent(data.note);
+    setError(null);
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+    setNoteContent(null);
+  };
+
+  const handleSubmit = async () => {
+    if (!noteContent) return;
+
+    try {
+      setIsSubmitting(true);
+      await addNote(params.id, noteContent);
+      router.push(`/book/${params.id}`);
+      router.refresh();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to add note');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Take Notes: {book.title}</h1>
+    <div className="container max-w-2xl mx-auto p-4 space-y-6">
+      <h1 className="text-2xl font-bold">Take a Note</h1>
       
-      {/* Camera component */}
-      <CameraCapture bookId={params.id} />
-
-      {/* Notes list */}
-      <div className="mt-8 space-y-4">
-        <h2 className="text-xl font-semibold">Previous Notes</h2>
-        {notes.length === 0 ? (
-          <p className="text-gray-500">No notes yet. Start taking notes!</p>
-        ) : (
-          notes.map((note) => (
-            <div key={note.id} className="p-4 border rounded-lg">
-              <p>{note.note_content}</p>
+      {!noteContent ? (
+        <>
+          <CameraCapture 
+            mode="note"
+            onCapture={handleCapture}
+            onError={handleError}
+          />
+          {error && (
+            <div className="text-red-500 text-center">
+              {error}
             </div>
-          ))
-        )}
-      </div>
+          )}
+        </>
+      ) : (
+        <Card className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Note Content
+            </label>
+            <Textarea
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              rows={6}
+            />
+          </div>
+          
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              onClick={() => setNoteContent(null)}
+              disabled={isSubmitting}
+            >
+              Retake Photo
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex-1"
+            >
+              {isSubmitting ? 'Adding Note...' : 'Add Note'}
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 } 

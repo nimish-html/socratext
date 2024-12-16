@@ -17,84 +17,176 @@ export interface Note {
 }
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Missing Supabase environment variables:", {
+    url: !!supabaseUrl,
+    key: !!supabaseKey
+  });
+  throw new Error("Supabase configuration is missing. Please check your environment variables.");
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Book-related queries
 export async function addBook(title: string, author: string) {
-  const { data, error } = await supabase
-    .from('books')
-    .insert([{ title, author }])
-    .select()
-    .single();
+  console.log("Adding book to Supabase:", { title, author });
+  
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .insert([{ title, author }])
+      .select()
+      .single();
 
-  if (error) throw new Error(error.message);
-  return data as Book;
+    if (error) {
+      console.error("Supabase error adding book:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Successfully added book:", data);
+    return data as Book;
+  } catch (error) {
+    console.error("Error in addBook function:", error);
+    throw error;
+  }
 }
 
 export async function fetchBooks() {
-  const { data, error } = await supabase
-    .from('books')
-    .select('*')
-    .order('created_at', { ascending: false });
+  console.log("Fetching all books from Supabase");
+  
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) throw new Error(error.message);
-  return data as Book[];
+    if (error) {
+      console.error("Supabase error fetching books:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Successfully fetched books:", data);
+    return data as Book[];
+  } catch (error) {
+    console.error("Error in fetchBooks function:", error);
+    throw error;
+  }
 }
 
 export async function fetchBookById(id: string) {
-  const { data, error } = await supabase
-    .from('books')
-    .select('*')
-    .eq('id', id)
-    .single();
+  console.log("Fetching book by ID:", id);
+  
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (error) throw new Error(error.message);
-  return data as Book;
+    if (error) {
+      console.error("Supabase error fetching book by ID:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Successfully fetched book:", data);
+    return data as Book;
+  } catch (error) {
+    console.error("Error in fetchBookById function:", error);
+    throw error;
+  }
 }
 
 // Note-related queries
 export async function fetchNotes(bookId: string) {
-  const { data, error } = await supabase
-    .from('notes')
-    .select('*')
-    .eq('book_id', bookId)
-    .order('created_at', { ascending: false });
+  console.log("Fetching notes for book:", bookId);
+  
+  try {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('book_id', bookId)
+      .order('created_at', { ascending: false });
 
-  if (error) throw new Error(error.message);
-  return data as Note[];
+    if (error) {
+      console.error("Supabase error fetching notes:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Successfully fetched notes:", data);
+    return data as Note[];
+  } catch (error) {
+    console.error("Error in fetchNotes function:", error);
+    throw error;
+  }
 }
 
 export async function addNote(bookId: string, noteContent: string) {
-  const { data, error } = await supabase
-    .from('notes')
-    .insert([{ book_id: bookId, note_content: noteContent }])
-    .select()
-    .single();
+  console.log("Adding note for book:", { bookId, noteContent });
+  
+  try {
+    const { data, error } = await supabase
+      .from('notes')
+      .insert([{ book_id: bookId, note_content: noteContent }])
+      .select()
+      .single();
 
-  if (error) throw new Error(error.message);
-  return data as Note;
+    if (error) {
+      console.error("Supabase error adding note:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Successfully added note:", data);
+    return data as Note;
+  } catch (error) {
+    console.error("Error in addNote function:", error);
+    throw error;
+  }
 }
 
-// Delete operations (optional but useful)
+// Delete operations
 export async function deleteBook(id: string) {
-  const { error } = await supabase
-    .from('books')
-    .delete()
-    .eq('id', id);
+  console.log("Deleting book:", id);
+  
+  try {
+    const { error } = await supabase
+      .from('books')
+      .delete()
+      .eq('id', id);
 
-  if (error) throw new Error(error.message);
-  return true;
+    if (error) {
+      console.error("Supabase error deleting book:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Successfully deleted book:", id);
+    return true;
+  } catch (error) {
+    console.error("Error in deleteBook function:", error);
+    throw error;
+  }
 }
 
 export async function deleteNote(id: string) {
-  const { error } = await supabase
-    .from('notes')
-    .delete()
-    .eq('id', id);
+  console.log("Deleting note:", id);
+  
+  try {
+    const { error } = await supabase
+      .from('notes')
+      .delete()
+      .eq('id', id);
 
-  if (error) throw new Error(error.message);
-  return true;
+    if (error) {
+      console.error("Supabase error deleting note:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Successfully deleted note:", id);
+    return true;
+  } catch (error) {
+    console.error("Error in deleteNote function:", error);
+    throw error;
+  }
 } 
